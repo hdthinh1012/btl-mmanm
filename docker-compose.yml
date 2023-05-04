@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  python:
+    image: python:3-alpine
+    volumes:
+      - ./:/mmanm/
+    working_dir: /mmanm/
+    entrypoint: python
