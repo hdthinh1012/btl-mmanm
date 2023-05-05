@@ -55,6 +55,14 @@ if __name__ == "__main__":
     output_path = prompt_output_path()
 
     if mode == 1:
+        if cipher == 1:
+            ceasar_key = prompt_ceasar_key()
+            with open(input_path, "rt") as f:
+                plain_text = f.read()
+                cipher_text = caesar_encrypt(plain_text, int(ceasar_key))
+                fout = open(output_path, "wt")
+                fout.write(cipher_text)
+                fout.close()
         if cipher == 2:
             railfence_key = prompt_railfence_key()
             with open(input_path, "rt") as f:
@@ -65,6 +73,14 @@ if __name__ == "__main__":
                 fout.close()
 
     if mode == 2:
+        if cipher == 1:
+            ceasar_key = prompt_ceasar_key()
+            with open(input_path, "rt") as f:
+                cipher_text = f.read()
+                plain_text = caesar_decrypt(cipher_text, int(ceasar_key))
+                fout = open(output_path, "wt")
+                fout.write(plain_text)
+                fout.close()
         if cipher == 2:
             railfence_key = prompt_railfence_key()
             with open(input_path, "rt") as f:
@@ -75,6 +91,10 @@ if __name__ == "__main__":
                 fout.close()
 
     if mode == 3:
+        if cipher == 1:
+            # TODO: Ceasar cipher analysis
+            pass
+
         if cipher == 2:
             with open(input_path, "rt") as f:
                 railfence_text = f.read()
@@ -85,3 +105,13 @@ if __name__ == "__main__":
                     fout.write(f"Key: {key}\n")
                     fout.write(plain_text)
                     fout.close()
+
+        if cipher == 3:
+            # TODO: Combined cipher analysis
+            pass
+
+        if cipher == 4:
+            # TODO: Complex cipher analysis
+            pass
+
+    print("Done")
