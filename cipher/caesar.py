@@ -30,11 +30,13 @@ from string import ascii_uppercase
 #     'Z' : 00.09,
 # }
 
+
 def caesar_encrypt(text: str, key: int, alphabet: str = ascii_uppercase) -> str:
     """Caesar cipher (Substitution cipher)"""
 
     shifted_alphabet = alphabet[key:] + alphabet[:key]
     return text.translate(text.maketrans(alphabet, shifted_alphabet))
+
 
 def caesar_decrypt(text: str, key: int, alphabet: str = ascii_uppercase) -> str:
     """Caesar cipher (Substitution cipher)"""
