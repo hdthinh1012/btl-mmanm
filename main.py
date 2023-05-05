@@ -3,36 +3,85 @@ import argparse
 from string import ascii_uppercase
 from secrets import randbelow
 from cipher.caesar import caesar_encrypt, caesar_decrypt
-from cipher.railfence import railfence_encrypt, railfence_decrypt
+from cipher.railfence import (
+    railfence_encrypt,
+    railfence_decrypt,
+    railfence_cryptoanalysis,
+)
+
+
+def prompt_mode():
+    mode = input("Choose mode:\n1. Encrypt\n2. Decrypt\n3. Analysis\n")
+    while mode not in ["1", "2", "3"]:
+        mode = input(
+            "Invalid input. Choose mode:\n1. Encrypt\n2. Decrypt\n3. Analysis\n"
+        )
+    return mode
+
+
+def prompt_cipher():
+    cipher = input(
+        "Choose cipher:\n1. Caesar\n2. Railfence\n3. Combined (Ceasar + Railfence)\n4. Complex(random 1 in 3 above ciphers)\n"
+    )
+    while cipher not in ["1", "2", "3", "4"]:
+        cipher = input("Invalid input. Choose cipher:\n1. Caesar\n2. Railfence\n")
+    return cipher
+
+
+def prompt_input_path():
+    input_path = input("Provide input path:\n")
+    return input_path
+
+
+def prompt_output_path():
+    output_path = input("Provide output path:\n")
+    return output_path
+
+
+def prompt_ceasar_key():
+    key = input("Provide ceasar key:\n")
+    return key
+
+
+def prompt_railfence_key():
+    key = input("Provide railfence key:\n")
+    return key
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    mode = int(prompt_mode())
+    cipher = int(prompt_cipher())
+    input_path = prompt_input_path()
+    output_path = prompt_output_path()
 
-    parser.add_argument("--enc", nargs="?", type=argparse.FileType('rt'), const="temp/inp.txt", metavar="FILE", help="Encrypt from input file")
-    parser.add_argument("--dec", nargs="?", type=argparse.FileType('wt'), const="temp/out.txt", metavar="FILE", help="Decrypt to output file")
+    if mode == 1:
+        if cipher == 2:
+            railfence_key = prompt_railfence_key()
+            with open(input_path, "rt") as f:
+                plain_text = f.read()
+                cipher_text = railfence_encrypt(plain_text, int(railfence_key))
+                fout = open(output_path, "wt")
+                fout.write(cipher_text)
+                fout.close()
 
-    parser.add_argument("--caesar", type=str, default="temp/caesar.txt", metavar="FILE", help="Caesar cipher encrypted file")
-    parser.add_argument("--railfence", type=str, default="temp/railfence.txt", metavar="FILE", help="Rail Fence cipher encrypted file")
+    if mode == 2:
+        if cipher == 2:
+            railfence_key = prompt_railfence_key()
+            with open(input_path, "rt") as f:
+                cipher_text = f.read()
+                plain_text = railfence_decrypt(cipher_text, int(railfence_key))
+                fout = open(output_path, "wt")
+                fout.write(plain_text)
+                fout.close()
 
-    args = parser.parse_args()
+    if mode == 3:
+        if cipher == 2:
+            with open(input_path, "rt") as f:
+                railfence_text = f.read()
+                plain_text, key = railfence_cryptoanalysis(railfence_text)
 
-    if args.enc:
-        with (
-            open(args.caesar, "wt") as f1,
-            open(args.railfence, "wt") as f2
-        ):
-            plain_text = args.enc.read()
-            f1.write(caesar_encrypt(plain_text, key=randbelow(26)))
-            f2.write(railfence_encrypt(plain_text, key=randbelow(len(plain_text))))
-
-    if args.dec:
-        with (
-            open(args.caesar, "rt") as f1,
-            open(args.railfence, "rt") as f2
-        ):
-            caesar_text = f1.read()
-            railfence_text = f2.read()
-            for k in range(len(caesar_text)):
-                if (caesar_text[k].isalpha() and railfence_text[k].isalpha()):
-                    args.dec.write(caesar_decrypt(caesar_text, key=(ord(caesar_text[k]) - ord(railfence_text[k]))))
-                    break
+                if key != 0:
+                    fout = open(output_path, "wt")
+                    fout.write(f"Key: {key}\n")
+                    fout.write(plain_text)
+                    fout.close()
