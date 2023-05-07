@@ -56,74 +56,9 @@ class CaesarCipher(BaseCipher):
 
         return CaesarCipher.encrypt(text, -key)
 
-    # def __frequency_statistic(self: CaesarCipher, text: str) -> dict[str, float]:
-    #     """Calculate occurrence rate of each character in text."""
-
-    #     char, times = np.unique(list(text), return_counts=True)
-    #     return dict(zip(char, (times * 100 / len(text)).round(2)))
-
-    # def __predict_mapping(self: CaesarCipher) -> list[list[str, str]]:
-    #     """Predict mapping table by comparing frequency."""
-
-    #     reality_freq = self.__frequency_statistic()
-
-    #     diff = np.array(
-    #         np.abs(
-    #             np.hstack(list(reality_freq.values()))
-    #             - np.vstack(list(self.__theory_freq.values()))
-    #         )
-    #     )
-    #     src = list(self.__theory_freq.keys())
-    #     dst = list(reality_freq.keys())
-
-    #     mapping = []
-    #     while diff.size != 0:
-    #         i1, i2 = np.array(np.where(diff == diff.min()))[
-    #             :, 0
-    #         ]  # i1 for vstack, i2 for hstack
-    #         mapping.append([src.pop(i1), dst.pop(i2)])
-    #         diff = np.delete(diff, i1, axis=0)
-    #         diff = np.delete(diff, i2, axis=1)
-    #     return mapping
-
-    # def __optimize_dev(self: CaesarCipher, dev: np.ndarray) -> np.ndarray:
-    #     """."""
-    #     print(dev)
-    #     print(np.std(dev))
-
-    #     optimized_dev = dev.copy()
-    #     for idx in range(len(optimized_dev)):
-    #         tmp = optimized_dev.copy()
-    #         tmp[idx] = (
-    #             (tmp[idx] + len(self.__alphabet))
-    #             if (tmp[idx] < 0)
-    #             else (tmp[idx] - len(self.__alphabet))
-    #         )
-    #         if np.std(tmp) < np.std(optimized_dev):
-    #             optimized_dev = tmp
-
-    #     if np.array_equal(dev, optimized_dev):
-    #         return dev
-
-    #     return self.__optimize_dev(optimized_dev)
-
-    # def predict_key(self: CaesarCipher) -> int:
-    #     """Predict key."""
-
-    #     mapping = self.__predict_mapping()
-    #     dev = np.array(
-    #         [
-    #             self.__alphabet.index(dst) - self.__alphabet.index(src)
-    #             for src, dst in mapping
-    #         ]
-    #     )
-    #     return np.std(self.__optimize_dev(dev)).astype(int)
-
     @staticmethod
     def crack(text: str, alphabet: str = ascii_letters) -> str:
         """."""
-
-        # theory_freq = json.dumps(Path.read_text("resource/char_frequency.json"))
 
         wordlist = set()
         for word in Path("resource/words_alpha.txt").read_text().split():
