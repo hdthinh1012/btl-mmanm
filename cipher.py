@@ -126,14 +126,14 @@ class RailfenceCipher(BaseCipher):
 
         wordlist = set()
         for word in Path("resource/words_alpha.txt").read_text().split():
-            if len(word) >= 3:
+            if len(word) >= 5:
                 wordlist.add(word)
 
         for key in range(2, len(text)):
             plaintext = RailfenceCipher.decrypt(text, key)
 
             real_word = 0
-            for word in re.findall(r"\w{3,}", plaintext):
+            for word in re.findall(r"\w{5,}", plaintext):
                 if word in wordlist:
                     print(word)
                     real_word += 1
