@@ -1,6 +1,6 @@
 import argparse
 
-from string import ascii_uppercase
+from string import ascii_uppercase, ascii_lowercase
 from secrets import randbelow
 from cipher.caesar import caesar_encrypt, caesar_decrypt
 from cipher.railfence import (
@@ -59,7 +59,12 @@ if __name__ == "__main__":
             ceasar_key = prompt_ceasar_key()
             with open(input_path, "rt") as f:
                 plain_text = f.read()
-                cipher_text = caesar_encrypt(plain_text, int(ceasar_key))
+                cipher_text = caesar_encrypt(
+                    plain_text, int(ceasar_key), ascii_lowercase
+                )
+                cipher_text = caesar_encrypt(
+                    cipher_text, int(ceasar_key), ascii_uppercase
+                )
                 fout = open(output_path, "wt")
                 fout.write(cipher_text)
                 fout.close()
@@ -77,7 +82,12 @@ if __name__ == "__main__":
             ceasar_key = prompt_ceasar_key()
             with open(input_path, "rt") as f:
                 cipher_text = f.read()
-                plain_text = caesar_decrypt(cipher_text, int(ceasar_key))
+                plain_text = caesar_decrypt(
+                    cipher_text, int(ceasar_key), ascii_uppercase
+                )
+                plain_text = caesar_decrypt(
+                    plain_text, int(ceasar_key), ascii_lowercase
+                )
                 fout = open(output_path, "wt")
                 fout.write(plain_text)
                 fout.close()
