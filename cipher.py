@@ -9,6 +9,23 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from string import ascii_letters
 
+import numpy as np
+
+
+def frequency_statistic(text: str, alphabet: str = ascii_letters) -> dict[str, float]:
+    """Calculate occurrence rate of each character in `text`, sorted by rate."""
+
+    char, times = np.unique(
+        [char for char in text if char in alphabet], return_counts=True
+    )
+    return dict(
+        sorted(
+            zip(char, (times * 100 / len(text)).round(2)),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+    )
+
 
 class BaseCipher(ABC):
     """."""
@@ -64,17 +81,18 @@ class CaesarCipher(BaseCipher):
             if len(word) >= 5:
                 wordlist.add(word)
 
-        for key in range(len(alphabet)):
-            plaintext = CaesarCipher.decrypt(text, key)
+        for char in frequency_statistic(text).keys():
+            key = alphabet.index(char) - alphabet.index("e")
+
+            plaintext = CaesarCipher.decrypt(text, key, alphabet)
 
             real_word = 0
             for word in re.findall(r"\w{5,}", plaintext):
                 if word in wordlist:
                     real_word += 1
                     if real_word >= 100:
+                        print("Caesar key: " + str(key))
                         return plaintext
-
-        print("Failed to crack")
 
         return None
 
@@ -142,10 +160,8 @@ class RailfenceCipher(BaseCipher):
                 if word in wordlist:
                     real_word += 1
                     if real_word >= 100:
-                        print("key: " + str(key))
+                        print("Railfence key: " + str(key))
                         return plaintext
-
-        print("Failed to crack")
 
         return None
 
@@ -163,15 +179,30 @@ class MixCipher(BaseCipher):
     def decrypt(text: str, key1: int, key2: int, alphabet: str = ascii_letters) -> str:
         """Decrypt `text` with `key`."""
 
-        return CaesarCipher.decrypt(RailfenceCipher.decrypt(text, key2), key1, alphabet)
+        return RailfenceCipher.decrypt(CaesarCipher.decrypt(text, key1, alphabet), key2)
 
     @staticmethod
-    def crack(text: str) -> str | None:
+    def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """Try to decrypt `text` using caesar cipher and railfence cipher without key."""
 
-        return ""
+        wordlist = Path("resource/words_alpha.txt").read_text()
 
-        print("Failed to crack")
+        for key2 in range(2, len(text)):
+            for char in list(frequency_statistic(text).keys())[:3]:
+                key1 = alphabet.index(char) - alphabet.index("e")
+
+                plaintext = MixCipher.decrypt(text, key1, key2, alphabet)
+
+                real_word = 0
+                for word in re.finditer(
+                    r"\w{6,13}", plaintext[: len(plaintext) // 100]
+                ):
+                    if word.group(0) in wordlist:
+                        real_word += 1
+                        if real_word >= 50:
+                            print("Caesar key: " + str(key1))
+                            print("Railfence key: " + str(key2))
+                            return plaintext
 
         return None
 
