@@ -9,6 +9,23 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from string import ascii_letters
 
+import numpy as np
+
+
+def frequency_statistic(text: str, alphabet: str = ascii_letters) -> dict[str, float]:
+    """Calculate occurrence rate of each character in `text`, sorted by rate."""
+
+    char, times = np.unique(
+        [char for char in text if char in alphabet], return_counts=True
+    )
+    return dict(
+        sorted(
+            zip(char, (times * 100 / len(text)).round(2)),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+    )
+
 
 class BaseCipher(ABC):
     """."""
@@ -64,7 +81,9 @@ class CaesarCipher(BaseCipher):
             if len(word) >= 5:
                 wordlist.add(word)
 
-        for key in range(len(alphabet)):
+        for char in frequency_statistic(text).keys():
+            key = alphabet.index(char) - alphabet.index("e")
+
             plaintext = CaesarCipher.decrypt(text, key)
 
             real_word = 0
@@ -72,6 +91,7 @@ class CaesarCipher(BaseCipher):
                 if word in wordlist:
                     real_word += 1
                     if real_word >= 100:
+                        print("Caesar key: " + str(key))
                         return plaintext
 
         print("Failed to crack")
