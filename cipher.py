@@ -75,10 +75,7 @@ class CaesarCipher(BaseCipher):
     def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """."""
 
-        wordlist = set()
-        for word in Path("resource/words_alpha.txt").read_text().split():
-            if len(word) >= 5:
-                wordlist.add(word)
+        wordlist = Path("resource/words_alpha.txt").read_text()
 
         for char in list(frequency_statistic(text).keys())[:3]:
             key = alphabet.index(char) - alphabet.index("e")
