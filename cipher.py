@@ -182,12 +182,27 @@ class MixCipher(BaseCipher):
         return RailfenceCipher.decrypt(CaesarCipher.decrypt(text, key1, alphabet), key2)
 
     @staticmethod
-    def crack(text: str) -> str | None:
+    def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """Try to decrypt `text` using caesar cipher and railfence cipher without key."""
 
-        return ""
+        wordlist = Path("resource/words_alpha.txt").read_text()
 
-        print("Failed to crack")
+        for key2 in range(2, len(text)):
+            for char in list(frequency_statistic(text).keys())[:3]:
+                key1 = alphabet.index(char) - alphabet.index("e")
+
+                plaintext = MixCipher.decrypt(text, key1, key2, alphabet)
+
+                real_word = 0
+                for word in re.finditer(
+                    r"\w{6,13}", plaintext[: len(plaintext) // 100]
+                ):
+                    if word.group(0) in wordlist:
+                        real_word += 1
+                        if real_word >= 50:
+                            print("Caesar key: " + str(key1))
+                            print("Railfence key: " + str(key2))
+                            return plaintext
 
         return None
 
