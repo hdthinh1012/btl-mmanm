@@ -100,12 +100,15 @@ if __name__ == "__main__":
         print(f"{(end - start) * 1000} miliseconds")
         if args.cipher == "railfence":
             start = timer()
-            RailfenceCipher.decrypt_2(inp, args.key[0], 100)
+            out = RailfenceCipher.decrypt_2(inp, args.key[0])
             end = timer()
             print(f"{(end - start) * 1000} miliseconds")
 
     elif args.mode == "crk":
+        start = timer()
         out = Cipher.crack(cipher_class, inp)
+        end = timer()
+        print(f"Crack time: {(end - start) * 1000} miliseconds")
 
     if out:
         Path(args.out).write_text(out)
