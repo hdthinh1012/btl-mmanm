@@ -84,7 +84,7 @@ class CaesarCipher(BaseCipher):
         for char in frequency_statistic(text).keys():
             key = alphabet.index(char) - alphabet.index("e")
 
-            plaintext = CaesarCipher.decrypt(text, key)
+            plaintext = CaesarCipher.decrypt(text, key, alphabet)
 
             real_word = 0
             for word in re.findall(r"\w{5,}", plaintext):
@@ -93,8 +93,6 @@ class CaesarCipher(BaseCipher):
                     if real_word >= 100:
                         print("Caesar key: " + str(key))
                         return plaintext
-
-        print("Failed to crack")
 
         return None
 
@@ -162,10 +160,8 @@ class RailfenceCipher(BaseCipher):
                 if word in wordlist:
                     real_word += 1
                     if real_word >= 100:
-                        print("key: " + str(key))
+                        print("Railfence key: " + str(key))
                         return plaintext
-
-        print("Failed to crack")
 
         return None
 
@@ -183,7 +179,7 @@ class MixCipher(BaseCipher):
     def decrypt(text: str, key1: int, key2: int, alphabet: str = ascii_letters) -> str:
         """Decrypt `text` with `key`."""
 
-        return CaesarCipher.decrypt(RailfenceCipher.decrypt(text, key2), key1, alphabet)
+        return RailfenceCipher.decrypt(CaesarCipher.decrypt(text, key1, alphabet), key2)
 
     @staticmethod
     def crack(text: str) -> str | None:
