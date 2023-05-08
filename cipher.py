@@ -192,9 +192,8 @@ class RailfenceCipher(BaseCipher):
                 runner -= 1
             else:
                 runner += 1
-            print(result)
-        # print(idx, lens)
-        # print("".join(result))
+            # print(result)
+        print("".join(result))
         return "".join(result)
 
 
