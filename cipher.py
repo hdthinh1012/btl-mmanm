@@ -103,19 +103,28 @@ class RailfenceCipher(BaseCipher):
     def decrypt(text: str, key: int) -> str:
         """Decrypt `text` with `key`."""
 
-        if key <= 1 or key >= len(text):
-            return text
-
+        cols = len(text)
         rows = key
         cycle = rows * 2 - 2
-        result = [""] * len(text)
 
-        index = -1
+        result = [""] * cols
+        index = 0
+
         for y in range(rows):
-            for x in range(len(text)):
-                if (y + x) % cycle == 0 or (y - x) % cycle == 0:
-                    index += 1
-                    result[x] = text[index]
+            inc = (cycle - 2 * y) or cycle
+
+            x = y
+            while x < cols:
+                result[x] = text[index]
+                index += 1
+                if index >= cols:
+                    break
+                x += inc
+                inc = (cycle - inc) or cycle
+            else:
+                continue
+
+            break
 
         return "".join(result)
 
