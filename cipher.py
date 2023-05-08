@@ -207,7 +207,7 @@ class RailfenceCipher(BaseCipher):
                 wordlist.add(word)
 
         for key in range(2, 2100):
-            plaintext = RailfenceCipher.decrypt(text, key)
+            plaintext = RailfenceCipher.decrypt_2(text, key)
 
             real_word = 0
             real_word_record = -1
