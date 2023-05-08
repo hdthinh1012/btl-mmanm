@@ -44,6 +44,7 @@ class CaesarCipher(BaseCipher):
     def encrypt(text: str, key: int, alphabet: str = ascii_letters) -> str:
         """Caesar cipher encrypt."""
 
+        key = key % len(alphabet)
         if key == 0:
             return text
 
@@ -87,7 +88,7 @@ class RailfenceCipher(BaseCipher):
     def encrypt(text: str, key: int) -> str:
         """Encrypt `text` with `key`."""
 
-        if key == 0:
+        if key <= 1 or key >= len(text):
             return text
 
         rows = key
@@ -104,7 +105,7 @@ class RailfenceCipher(BaseCipher):
     def decrypt(text: str, key: int) -> str:
         """Decrypt `text` with `key`."""
 
-        if key == 0:
+        if key <= 1 or key >= len(text):
             return text
 
         rows = key
