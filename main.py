@@ -94,15 +94,9 @@ if __name__ == "__main__":
     if args.mode == "enc":
         out = Cipher.encrypt(cipher_class, inp, args.key)
     elif args.mode == "dec":
-        start = timer()
         out = Cipher.decrypt(cipher_class, inp, args.key)
-        end = timer()
-        print(f"{(end - start) * 1000} miliseconds")
         if args.cipher == "railfence":
-            start = timer()
             out = RailfenceCipher.decrypt_2(inp, args.key[0])
-            end = timer()
-            print(f"{(end - start) * 1000} miliseconds")
 
     elif args.mode == "crk":
         start = timer()

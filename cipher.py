@@ -207,16 +207,21 @@ class RailfenceCipher(BaseCipher):
                 wordlist.add(word)
 
         for key in range(2, 2100):
-            plaintext = RailfenceCipher.decrypt_2(text, key, 400)
+            plaintext = RailfenceCipher.decrypt(text, key)
 
             real_word = 0
-            for word in re.findall(r"\w{5,}", plaintext):
+            real_word_record = -1
+            current_key = -1
+            for word in re.findall(r"\w{3,}", plaintext):
                 if word.lower() in wordlist:
                     # print(word)
                     real_word += 1
-                    if real_word >= 40:
-                        return RailfenceCipher.decrypt(text, key)
+                    if real_word >= real_word_record:
+                        real_word_record = real_word
+                        current_key = key
+                    
             print(f"Trying key {key}, count {real_word} words")
+        return RailfenceCipher.decrypt(text, current_key)
 
         print("Failed to crack")
 
