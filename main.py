@@ -17,7 +17,7 @@ if __name__ == "__main__":
     enc_parser.add_argument(
         "cipher", choices=["caesar", "railfence", "mix"], help="Cipher"
     )
-    enc_parser.add_argument("key", type=int, help="Cipher key")
+    enc_parser.add_argument("key", nargs="+", type=int, help="Cipher key")
 
     enc_parser.add_argument(
         "--inp",
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     dec_parser.add_argument(
         "cipher", choices=["caesar", "railfence", "mix"], help="Cipher"
     )
-    dec_parser.add_argument("key", type=int, help="Cipher key")
+    dec_parser.add_argument("key", nargs="+", type=int, help="Cipher key")
 
     dec_parser.add_argument(
         "--inp",
@@ -57,10 +57,7 @@ if __name__ == "__main__":
 
     crk_parser = sub_parser.add_parser("crk", help="Crack mode")
     crk_parser.add_argument(
-        "--cipher",
-        action="store",
-        choices=["caesar", "railfence", "mix"],
-        help="Cipher",
+        "--cipher", choices=["caesar", "railfence", "mix"], help="Cipher"
     )
 
     crk_parser.add_argument(
@@ -95,11 +92,11 @@ if __name__ == "__main__":
         cipher_class = Cipher
 
     if args.mode == "enc":
-        out = cipher_class.encrypt(inp, args.key)
+        out = Cipher.encrypt(cipher_class, inp, args.key)
     elif args.mode == "dec":
-        out = cipher_class.decrypt(inp, args.key)
+        out = Cipher.decrypt(cipher_class, inp, args.key)
     elif args.mode == "crk":
-        out = cipher_class.crack(inp)
+        out = Cipher.crack(cipher_class, inp)
 
     if out:
         Path(args.out).write_text(out)
