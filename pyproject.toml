@@ -1,0 +1,55 @@
+[tool.poetry]
+name = "btl-mmanm"
+version = "0.1.0"
+description = ""
+authors = ["meterglost <54196381+meterglost@users.noreply.github.com>"]
+readme = "README.md"
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.0.265"
+black = "^23.3.0"
+
+
+[tool.ruff]
+fix = true
+select = [
+    "F",
+    "E",
+    "C90",
+    "I",
+    "N",
+    "D",
+    "UP",
+    "ANN",
+    "BLE",
+    "A",
+    "ICN",
+    "Q",
+    "RSE",
+    "RET",
+    "PTH",
+    "PD",
+]
+ignore = ["D202", "D212", "D401", "E501"]
+unfixable = ["F401"]
+
+[tool.ruff.isort]
+lines-between-types = 1
+
+[tool.ruff.flake8-import-conventions.aliases]
+numpy = "np"
+pandas = "pd"
+scipy = "sp"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

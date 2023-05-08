@@ -1,127 +1,111 @@
+"""."""
+from timeit import default_timer as timer
 import argparse
 
-from string import ascii_uppercase, ascii_lowercase
-from secrets import randbelow
-from cipher.caesar import caesar_encrypt, caesar_decrypt
-from cipher.railfence import (
-    railfence_encrypt,
-    railfence_decrypt,
-    railfence_cryptoanalysis,
-)
+from pathlib import Path
 
-
-def prompt_mode():
-    mode = input("Choose mode:\n1. Encrypt\n2. Decrypt\n3. Analysis\n")
-    while mode not in ["1", "2", "3"]:
-        mode = input(
-            "Invalid input. Choose mode:\n1. Encrypt\n2. Decrypt\n3. Analysis\n"
-        )
-    return mode
-
-
-def prompt_cipher():
-    cipher = input(
-        "Choose cipher:\n1. Caesar\n2. Railfence\n3. Combined (Ceasar + Railfence)\n4. Complex(random 1 in 3 above ciphers)\n"
-    )
-    while cipher not in ["1", "2", "3", "4"]:
-        cipher = input("Invalid input. Choose cipher:\n1. Caesar\n2. Railfence\n")
-    return cipher
-
-
-def prompt_input_path():
-    input_path = input("Provide input path:\n")
-    return input_path
-
-
-def prompt_output_path():
-    output_path = input("Provide output path:\n")
-    return output_path
-
-
-def prompt_ceasar_key():
-    key = input("Provide ceasar key:\n")
-    return key
-
-
-def prompt_railfence_key():
-    key = input("Provide railfence key:\n")
-    return key
-
+from cipher import CaesarCipher, Cipher, MixCipher, RailfenceCipher
 
 if __name__ == "__main__":
-    mode = int(prompt_mode())
-    cipher = int(prompt_cipher())
-    input_path = prompt_input_path()
-    output_path = prompt_output_path()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
 
-    if mode == 1:
-        if cipher == 1:
-            ceasar_key = prompt_ceasar_key()
-            with open(input_path, "rt") as f:
-                plain_text = f.read()
-                cipher_text = caesar_encrypt(
-                    plain_text, int(ceasar_key), ascii_lowercase
-                )
-                cipher_text = caesar_encrypt(
-                    cipher_text, int(ceasar_key), ascii_uppercase
-                )
-                fout = open(output_path, "wt")
-                fout.write(cipher_text)
-                fout.close()
-        if cipher == 2:
-            railfence_key = prompt_railfence_key()
-            with open(input_path, "rt") as f:
-                plain_text = f.read()
-                cipher_text = railfence_encrypt(plain_text, int(railfence_key))
-                fout = open(output_path, "wt")
-                fout.write(cipher_text)
-                fout.close()
+    sub_parser = parser.add_subparsers(title="Mode", required=True, dest="mode")
 
-    if mode == 2:
-        if cipher == 1:
-            ceasar_key = prompt_ceasar_key()
-            with open(input_path, "rt") as f:
-                cipher_text = f.read()
-                plain_text = caesar_decrypt(
-                    cipher_text, int(ceasar_key), ascii_uppercase
-                )
-                plain_text = caesar_decrypt(
-                    plain_text, int(ceasar_key), ascii_lowercase
-                )
-                fout = open(output_path, "wt")
-                fout.write(plain_text)
-                fout.close()
-        if cipher == 2:
-            railfence_key = prompt_railfence_key()
-            with open(input_path, "rt") as f:
-                cipher_text = f.read()
-                plain_text = railfence_decrypt(cipher_text, int(railfence_key))
-                fout = open(output_path, "wt")
-                fout.write(plain_text)
-                fout.close()
+    enc_parser = sub_parser.add_parser("enc", help="Encrypt mode")
+    enc_parser.add_argument(
+        "cipher", choices=["caesar", "railfence", "mix"], help="Cipher"
+    )
+    enc_parser.add_argument("key", nargs="+", type=int, help="Cipher key")
 
-    if mode == 3:
-        if cipher == 1:
-            # TODO: Ceasar cipher analysis
-            pass
+    enc_parser.add_argument(
+        "--inp",
+        type=str,
+        default="temp/inp.txt",
+        metavar="FILE",
+        help="Input file",
+    )
+    enc_parser.add_argument(
+        "--out",
+        type=str,
+        default="temp/enc.txt",
+        metavar="FILE",
+        help="Output file",
+    )
 
-        if cipher == 2:
-            with open(input_path, "rt") as f:
-                railfence_text = f.read()
-                plain_text, key = railfence_cryptoanalysis(railfence_text)
+    dec_parser = sub_parser.add_parser("dec", help="Decrypt mode")
+    dec_parser.add_argument(
+        "cipher", choices=["caesar", "railfence", "mix"], help="Cipher"
+    )
+    dec_parser.add_argument("key", nargs="+", type=int, help="Cipher key")
 
-                if key != 0:
-                    fout = open(output_path, "wt")
-                    fout.write(f"Key: {key}\n")
-                    fout.write(plain_text)
-                    fout.close()
+    dec_parser.add_argument(
+        "--inp",
+        type=str,
+        default="temp/enc.txt",
+        metavar="FILE",
+        help="Input file",
+    )
+    dec_parser.add_argument(
+        "--out",
+        type=str,
+        default="temp/out.txt",
+        metavar="FILE",
+        help="Output file",
+    )
 
-        if cipher == 3:
-            # TODO: Combined cipher analysis
-            pass
+    crk_parser = sub_parser.add_parser("crk", help="Crack mode")
+    crk_parser.add_argument(
+        "--cipher", choices=["caesar", "railfence", "mix"], help="Cipher"
+    )
 
-        if cipher == 4:
-            # TODO: Complex cipher analysis
-            pass
+    crk_parser.add_argument(
+        "--inp",
+        type=str,
+        default="temp/enc.txt",
+        metavar="FILE",
+        help="Input file",
+    )
+    crk_parser.add_argument(
+        "--out",
+        type=str,
+        default="temp/out.txt",
+        metavar="FILE",
+        help="Output file",
+    )
 
-    print("Done")
+    args = parser.parse_args()
+
+    # print(args)
+    # exit()
+
+    inp = Path(args.inp).read_text()
+
+    if args.cipher == "caesar":
+        cipher_class = CaesarCipher
+    elif args.cipher == "railfence":
+        cipher_class = RailfenceCipher
+    elif args.cipher == "mix":
+        cipher_class = MixCipher
+    else:
+        cipher_class = Cipher
+
+    if args.mode == "enc":
+        out = Cipher.encrypt(cipher_class, inp, args.key)
+    elif args.mode == "dec":
+        start = timer()
+        out = Cipher.decrypt(cipher_class, inp, args.key)
+        end = timer()
+        print(f"{(end - start) * 1000} miliseconds")
+        if args.cipher == "railfence":
+            start = timer()
+            RailfenceCipher.decrypt_2(inp, args.key[0], 100)
+            end = timer()
+            print(f"{(end - start) * 1000} miliseconds")
+
+    elif args.mode == "crk":
+        out = Cipher.crack(cipher_class, inp)
+
+    if out:
+        Path(args.out).write_text(out)
