@@ -9,8 +9,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from string import ascii_letters
 
-import numpy as np
-
 
 class BaseCipher(ABC):
     """."""
@@ -44,6 +42,7 @@ class CaesarCipher(BaseCipher):
     def encrypt(text: str, key: int, alphabet: str = ascii_letters) -> str:
         """Caesar cipher encrypt."""
 
+        key = key % len(alphabet)
         if key == 0:
             return text
 
@@ -87,7 +86,7 @@ class RailfenceCipher(BaseCipher):
     def encrypt(text: str, key: int) -> str:
         """Encrypt `text` with `key`."""
 
-        if key == 0:
+        if key <= 1 or key >= len(text):
             return text
 
         rows = key
@@ -104,19 +103,28 @@ class RailfenceCipher(BaseCipher):
     def decrypt(text: str, key: int) -> str:
         """Decrypt `text` with `key`."""
 
-        if key == 0:
-            return text
-
+        cols = len(text)
         rows = key
         cycle = rows * 2 - 2
-        result = [""] * len(text)
 
-        index = -1
+        result = [""] * cols
+        index = 0
+
         for y in range(rows):
-            for x in range(len(text)):
-                if (y + x) % cycle == 0 or (y - x) % cycle == 0:
-                    index += 1
-                    result[x] = text[index]
+            inc = (cycle - 2 * y) or cycle
+
+            x = y
+            while x < cols:
+                result[x] = text[index]
+                index += 1
+                if index >= cols:
+                    break
+                x += inc
+                inc = (cycle - inc) or cycle
+            else:
+                continue
+
+            break
 
         return "".join(result)
 
@@ -124,10 +132,7 @@ class RailfenceCipher(BaseCipher):
     def crack(text: str) -> str | None:
         """Try to decrypt `text` without key."""
 
-        wordlist = set()
-        for word in Path("resource/words_alpha.txt").read_text().split():
-            if len(word) >= 5:
-                wordlist.add(word)
+        wordlist = Path("resource/words_alpha.txt").read_text()
 
         for key in range(2, len(text)):
             plaintext = RailfenceCipher.decrypt(text, key)
@@ -135,9 +140,9 @@ class RailfenceCipher(BaseCipher):
             real_word = 0
             for word in re.findall(r"\w{5,}", plaintext):
                 if word in wordlist:
-                    print(word)
                     real_word += 1
                     if real_word >= 100:
+                        print("key: " + str(key))
                         return plaintext
 
         print("Failed to crack")
