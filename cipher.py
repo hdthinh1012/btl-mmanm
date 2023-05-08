@@ -119,6 +119,84 @@ class RailfenceCipher(BaseCipher):
                     result[x] = text[index]
 
         return "".join(result)
+    
+    @staticmethod
+    def decrypt_2(text: str, key: int, lens: int = -1) -> str:
+        """
+        N: key
+        L: len(text)
+        """
+        if lens == -1:
+            lens = len(text)
+        
+        #
+        # Ideal:
+        # L = K * 2 * (N - 1)
+        #
+
+        matrix = []
+        dummy_text = text
+
+        k = len(text) // (2 * (key - 1))
+        if k * 2 * (key - 1) < len(text):
+            k += 1
+            # Not perfect case
+            # Solve: L + y = N + (N - 1) * x
+            x = 1
+            while x * (key - 1) < len(text) - key:
+                x += 1
+            y = x * (key - 1) + key - len(text)
+            if x % 2 == 1:
+                matrix.append(dummy_text[0:k])
+                dummy_text = dummy_text[k:]
+                for i in range(0, y - 1):
+                    matrix.append(dummy_text[0:2*k-1])
+                    dummy_text = dummy_text[2*k-1:]
+                for i in range(0, key - y - 1):
+                    matrix.append(dummy_text[0:2*k])
+                    dummy_text = dummy_text[2*k:]
+                matrix.append(dummy_text)
+            else:
+                matrix.append(dummy_text[0:k])
+                dummy_text = dummy_text[k:]
+                for i in range(0, key - y - 1):
+                    matrix.append(dummy_text[0:2*k-1])
+                    dummy_text = dummy_text[2*k-1:]
+                for i in range(0, y - 1):
+                    matrix.append(dummy_text[0:2*k-2])
+                    dummy_text = dummy_text[2*k-2:]
+                matrix.append(dummy_text)
+
+        else:
+            # Perfect case
+            matrix.append(dummy_text[0:k])
+            dummy_text = dummy_text[k:]
+            while len(dummy_text) > k:
+                matrix.append(dummy_text[0:2*k])
+                dummy_text = dummy_text[2*k:]
+            matrix.append(dummy_text)
+        # print(matrix)
+
+        idx = 0
+        runner = 0
+        reversed = False
+        result = []
+        while idx < lens:
+            if len(matrix[runner]) != 0:
+                result += matrix[runner][0]
+                matrix[runner] = matrix[runner][1:]
+                idx += 1
+            if runner == 0 and reversed or runner == key - 1 and not reversed:
+                reversed = not reversed
+            if reversed:
+                runner -= 1
+            else:
+                runner += 1
+            print(result)
+        # print(idx, lens)
+        # print("".join(result))
+        return "".join(result)
+
 
     @staticmethod
     def crack(text: str) -> str | None:
@@ -135,7 +213,7 @@ class RailfenceCipher(BaseCipher):
             real_word = 0
             for word in re.findall(r"\w{5,}", plaintext):
                 if word in wordlist:
-                    print(word)
+                    # print(word)
                     real_word += 1
                     if real_word >= 100:
                         return plaintext
