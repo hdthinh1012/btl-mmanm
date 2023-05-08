@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 
 from abc import ABC, abstractmethod
@@ -81,16 +80,16 @@ class CaesarCipher(BaseCipher):
             if len(word) >= 5:
                 wordlist.add(word)
 
-        for char in frequency_statistic(text).keys():
+        for char in list(frequency_statistic(text).keys())[:3]:
             key = alphabet.index(char) - alphabet.index("e")
 
             plaintext = CaesarCipher.decrypt(text, key, alphabet)
 
             real_word = 0
-            for word in re.findall(r"\w{5,}", plaintext):
-                if word in wordlist:
+            for word in re.finditer(r"\w{6,13}", plaintext[: len(plaintext) // 100]):
+                if word.group(0) in wordlist:
                     real_word += 1
-                    if real_word >= 100:
+                    if real_word >= 50:
                         print("Caesar key: " + str(key))
                         return plaintext
 
@@ -156,10 +155,10 @@ class RailfenceCipher(BaseCipher):
             plaintext = RailfenceCipher.decrypt(text, key)
 
             real_word = 0
-            for word in re.findall(r"\w{5,}", plaintext):
-                if word in wordlist:
+            for word in re.finditer(r"\w{6,13}", plaintext[: len(plaintext) // 100]):
+                if word.group(0) in wordlist:
                     real_word += 1
-                    if real_word >= 100:
+                    if real_word >= 50:
                         print("Railfence key: " + str(key))
                         return plaintext
 
@@ -188,7 +187,7 @@ class MixCipher(BaseCipher):
         wordlist = Path("resource/words_alpha.txt").read_text()
 
         for key2 in range(2, len(text)):
-            for char in list(frequency_statistic(text).keys())[:3]:
+            for char in list(frequency_statistic(text, alphabet).keys())[:3]:
                 key1 = alphabet.index(char) - alphabet.index("e")
 
                 plaintext = MixCipher.decrypt(text, key1, key2, alphabet)
@@ -254,14 +253,15 @@ class Cipher(BaseCipher):
         if plaintext:
             return plaintext
 
-        plaintext = RailfenceCipher.crack(text)
+        if list(frequency_statistic(text, alphabet).keys())[0] != "e":
+            plaintext = MixCipher.crack(text)
 
-        if plaintext:
-            return plaintext
+            if plaintext:
+                return plaintext
+        else:
+            plaintext = RailfenceCipher.crack(text)
 
-        plaintext = MixCipher.crack(text)
-
-        if plaintext:
-            return plaintext
+            if plaintext:
+                return plaintext
 
         return None
