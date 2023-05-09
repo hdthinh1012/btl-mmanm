@@ -106,3 +106,5 @@ if __name__ == "__main__":
 
     if out:
         Path(args.out).write_text(out)
+    else:
+        print("Failed to crack")

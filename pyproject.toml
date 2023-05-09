@@ -8,6 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+numpy = "^1.24.3"
 
 
 [tool.poetry.group.dev]
@@ -39,7 +40,7 @@ select = [
     "PD",
 ]
 ignore = ["D202", "D212", "D401", "E501"]
-unfixable = ["F401"]
+unfixable = ["F401", "F841"]
 
 [tool.ruff.isort]
 lines-between-types = 1

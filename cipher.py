@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 
 from abc import ABC, abstractmethod
@@ -10,6 +9,21 @@ from pathlib import Path
 from string import ascii_letters
 
 import numpy as np
+
+
+def frequency_statistic(text: str, alphabet: str = ascii_letters) -> dict[str, float]:
+    """Calculate occurrence rate of each character in `text`, sorted by rate."""
+
+    char, times = np.unique(
+        [char for char in text if char in alphabet], return_counts=True
+    )
+    return dict(
+        sorted(
+            zip(char, (times * 100 / len(text)).round(2)),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+    )
 
 
 class BaseCipher(ABC):
@@ -44,6 +58,7 @@ class CaesarCipher(BaseCipher):
     def encrypt(text: str, key: int, alphabet: str = ascii_letters) -> str:
         """Caesar cipher encrypt."""
 
+        key = key % len(alphabet)
         if key == 0:
             return text
 
@@ -60,22 +75,20 @@ class CaesarCipher(BaseCipher):
     def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """."""
 
-        wordlist = set()
-        for word in Path("resource/words_alpha.txt").read_text().split():
-            if len(word) >= 5:
-                wordlist.add(word)
+        wordlist = Path("resource/words_alpha.txt").read_text()
 
-        for key in range(len(alphabet)):
-            plaintext = CaesarCipher.decrypt(text, key)
+        for char in list(frequency_statistic(text).keys())[:3]:
+            key = alphabet.index(char) - alphabet.index("e")
+
+            plaintext = CaesarCipher.decrypt(text, key, alphabet)
 
             real_word = 0
-            for word in re.findall(r"\w{5,}", plaintext):
-                if word in wordlist:
+            for word in re.finditer(r"\w{6,13}", plaintext[: len(plaintext) // 100]):
+                if word.group(0) in wordlist:
                     real_word += 1
-                    if real_word >= 100:
+                    if real_word >= 50:
+                        print("Caesar key: " + str(key))
                         return plaintext
-
-        print("Failed to crack")
 
         return None
 
@@ -87,7 +100,7 @@ class RailfenceCipher(BaseCipher):
     def encrypt(text: str, key: int) -> str:
         """Encrypt `text` with `key`."""
 
-        if key == 0:
+        if key <= 1 or key >= len(text):
             return text
 
         rows = key
@@ -104,19 +117,28 @@ class RailfenceCipher(BaseCipher):
     def decrypt(text: str, key: int) -> str:
         """Decrypt `text` with `key`."""
 
-        if key == 0:
-            return text
-
+        cols = len(text)
         rows = key
         cycle = rows * 2 - 2
-        result = [""] * len(text)
 
-        index = -1
+        result = [""] * cols
+        index = 0
+
         for y in range(rows):
-            for x in range(len(text)):
-                if (y + x) % cycle == 0 or (y - x) % cycle == 0:
-                    index += 1
-                    result[x] = text[index]
+            inc = (cycle - 2 * y) or cycle
+
+            x = y
+            while x < cols:
+                result[x] = text[index]
+                index += 1
+                if index >= cols:
+                    break
+                x += inc
+                inc = (cycle - inc) or cycle
+            else:
+                continue
+
+            break
 
         return "".join(result)
     
@@ -201,10 +223,7 @@ class RailfenceCipher(BaseCipher):
     def crack(text: str) -> str | None:
         """Try to decrypt `text` without key."""
 
-        wordlist = set()
-        for word in Path("resource/words_alpha.txt").read_text().split():
-            if len(word) >= 5:
-                wordlist.add(word)
+        wordlist = Path("resource/words_alpha.txt").read_text()
 
         real_word_record = -1
         current_key = -1
@@ -224,10 +243,9 @@ class RailfenceCipher(BaseCipher):
             print(f"Trying key {key}, count {real_word} english words")
         print(f"Railfence key: {current_key}, found {real_word_record} english words in plaintext after decryption")
 
-        if real_word_record < 1000:
-            print("Failed to crack")
-            return None
-        return RailfenceCipher.decrypt(text, current_key)
+        print("Failed to crack")
+
+        return None
 
 
 class MixCipher(BaseCipher):
@@ -243,15 +261,30 @@ class MixCipher(BaseCipher):
     def decrypt(text: str, key1: int, key2: int, alphabet: str = ascii_letters) -> str:
         """Decrypt `text` with `key`."""
 
-        return CaesarCipher.decrypt(RailfenceCipher.decrypt(text, key2), key1, alphabet)
+        return RailfenceCipher.decrypt(CaesarCipher.decrypt(text, key1, alphabet), key2)
 
     @staticmethod
-    def crack(text: str) -> str | None:
+    def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """Try to decrypt `text` using caesar cipher and railfence cipher without key."""
 
-        return ""
+        wordlist = Path("resource/words_alpha.txt").read_text()
 
-        print("Failed to crack")
+        for key2 in range(2, len(text)):
+            for char in list(frequency_statistic(text, alphabet).keys())[:3]:
+                key1 = alphabet.index(char) - alphabet.index("e")
+
+                plaintext = MixCipher.decrypt(text, key1, key2, alphabet)
+
+                real_word = 0
+                for word in re.finditer(
+                    r"\w{6,13}", plaintext[: len(plaintext) // 100]
+                ):
+                    if word.group(0) in wordlist:
+                        real_word += 1
+                        if real_word >= 50:
+                            print("Caesar key: " + str(key1))
+                            print("Railfence key: " + str(key2))
+                            return plaintext
 
         return None
 
@@ -303,14 +336,15 @@ class Cipher(BaseCipher):
         if plaintext:
             return plaintext
 
-        plaintext = RailfenceCipher.crack(text)
+        if list(frequency_statistic(text, alphabet).keys())[0] != "e":
+            plaintext = MixCipher.crack(text)
 
-        if plaintext:
-            return plaintext
+            if plaintext:
+                return plaintext
+        else:
+            plaintext = RailfenceCipher.crack(text)
 
-        plaintext = MixCipher.crack(text)
-
-        if plaintext:
-            return plaintext
+            if plaintext:
+                return plaintext
 
         return None
