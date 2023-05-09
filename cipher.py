@@ -75,7 +75,7 @@ class CaesarCipher(BaseCipher):
     def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """."""
 
-        wordlist = Path("resource/words_alpha.txt").read_text()
+        wordlist = set(Path("resource/words_alpha.txt").read_text().split())
 
         for char in list(frequency_statistic(text).keys())[:3]:
             key = alphabet.index(char) - alphabet.index("e")
@@ -146,7 +146,7 @@ class RailfenceCipher(BaseCipher):
     def crack(text: str) -> str | None:
         """Try to decrypt `text` without key."""
 
-        wordlist = Path("resource/words_alpha.txt").read_text()
+        wordlist = set(Path("resource/words_alpha.txt").read_text().split())
 
         for key in range(2, len(text)):
             plaintext = RailfenceCipher.decrypt(text, key)
@@ -156,10 +156,28 @@ class RailfenceCipher(BaseCipher):
                 if word.group(0) in wordlist:
                     real_word += 1
                     if real_word >= 50:
-                        print("Railfence key: " + str(key))
-                        return plaintext
+                        break
+            else:
+                continue
 
-        return None
+            break
+
+        real_key = None
+        max_word_count = -1
+
+        for key in range(int(key * 0.95), int(key * 1.05)):
+            plaintext = RailfenceCipher.decrypt(text, key)
+
+            real_word = 0
+            for word in re.findall(r"\w{6,13}", plaintext):
+                if word in wordlist:
+                    real_word += 1
+
+            if real_word > max_word_count:
+                max_word_count, real_key = real_word, key
+
+        print("Railfence key: " + str(real_key))
+        return RailfenceCipher.decrypt(text, real_key)
 
 
 class MixCipher(BaseCipher):
@@ -181,7 +199,7 @@ class MixCipher(BaseCipher):
     def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """Try to decrypt `text` using caesar cipher and railfence cipher without key."""
 
-        wordlist = Path("resource/words_alpha.txt").read_text()
+        wordlist = set(Path("resource/words_alpha.txt").read_text().split())
 
         for key2 in range(2, len(text)):
             for char in list(frequency_statistic(text, alphabet).keys())[:3]:
@@ -197,10 +215,34 @@ class MixCipher(BaseCipher):
                         real_word += 1
                         if real_word >= 50:
                             print("Caesar key: " + str(key1))
-                            print("Railfence key: " + str(key2))
-                            return plaintext
+                            text = CaesarCipher.decrypt(text, key1)
+                            break
+                else:
+                    continue
 
-        return None
+                break
+
+            else:
+                continue
+
+            break
+
+        real_key = None
+        max_word_count = -1
+
+        for key2 in range(int(key2 * 0.95), int(key2 * 1.05)):
+            plaintext = RailfenceCipher.decrypt(text, key2)
+
+            real_word = 0
+            for word in re.findall(r"\w{6,13}", plaintext):
+                if word in wordlist:
+                    real_word += 1
+
+            if real_word > max_word_count:
+                max_word_count, real_key = real_word, key2
+
+        print("Railfence key: " + str(real_key))
+        return RailfenceCipher.decrypt(text, real_key)
 
 
 class Cipher(BaseCipher):
