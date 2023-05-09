@@ -206,12 +206,11 @@ class RailfenceCipher(BaseCipher):
             if len(word) >= 5:
                 wordlist.add(word)
 
-        for key in range(2, 2100):
+        real_word_record = -1
+        current_key = -1
+        for key in range(2, len(text)):
             plaintext = RailfenceCipher.decrypt_2(text, key)
-
             real_word = 0
-            real_word_record = -1
-            current_key = -1
             for word in re.findall(r"\w{3,}", plaintext):
                 if word.lower() in wordlist:
                     # print(word)
@@ -219,13 +218,16 @@ class RailfenceCipher(BaseCipher):
                     if real_word >= real_word_record:
                         real_word_record = real_word
                         current_key = key
-                    
-            print(f"Trying key {key}, count {real_word} words")
+            if real_word_record - real_word > 1000:
+                # The real word count is decreasing
+                break
+            print(f"Trying key {key}, count {real_word} english words")
+        print(f"Railfence key: {current_key}, found {real_word_record} english words in plaintext after decryption")
+
+        if real_word_record < 1000:
+            print("Failed to crack")
+            return None
         return RailfenceCipher.decrypt(text, current_key)
-
-        print("Failed to crack")
-
-        return None
 
 
 class MixCipher(BaseCipher):
