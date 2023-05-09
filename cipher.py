@@ -75,7 +75,7 @@ class CaesarCipher(BaseCipher):
     def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """."""
 
-        wordlist = Path("resource/words_alpha.txt").read_text()
+        wordlist = set(Path("resource/words_alpha.txt").read_text().split())
 
         for char in list(frequency_statistic(text).keys())[:3]:
             key = alphabet.index(char) - alphabet.index("e")
@@ -146,7 +146,7 @@ class RailfenceCipher(BaseCipher):
     def crack(text: str) -> str | None:
         """Try to decrypt `text` without key."""
 
-        wordlist = Path("resource/words_alpha.txt").read_text()
+        wordlist = set(Path("resource/words_alpha.txt").read_text().split())
 
         for key in range(2, len(text)):
             plaintext = RailfenceCipher.decrypt(text, key)
@@ -181,7 +181,7 @@ class MixCipher(BaseCipher):
     def crack(text: str, alphabet: str = ascii_letters) -> str | None:
         """Try to decrypt `text` using caesar cipher and railfence cipher without key."""
 
-        wordlist = Path("resource/words_alpha.txt").read_text()
+        wordlist = set(Path("resource/words_alpha.txt").read_text().split())
 
         for key2 in range(2, len(text)):
             for char in list(frequency_statistic(text, alphabet).keys())[:3]:
